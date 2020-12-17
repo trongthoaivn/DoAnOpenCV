@@ -54,6 +54,12 @@ class frm_Main(QtWidgets.QMainWindow):
         self.page_Help = self.findChild(QtWidgets.QWidget, 'Help')
         self.btn_Help.clicked.connect(lambda: self.page_list.setCurrentWidget(self.page_Help))
 
+        # btn_Class
+
+        self.btn_Class = self.findChild(QtWidgets.QPushButton, 'btn_Class')
+        self.page_Class = self.findChild(QtWidgets.QWidget, 'Class')
+        self.btn_Class.clicked.connect(lambda: self.page_list.setCurrentWidget(self.page_Class))
+
         # lb_Timer
 
         self.lb_Timer = self.findChild(QtWidgets.QLabel, 'lb_Timer')
