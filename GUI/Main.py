@@ -2,20 +2,23 @@ import sys
 from datetime import datetime
 import cv2
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import QPropertyAnimation, QTimer
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox, QLineEdit
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QPixmap, QImage
+import pymysql
+from PyQt5.QtWidgets import QTableWidgetItem
+
+faceCascade = cv2.CascadeClassifier('Cascades/haarcascade_frontalface_default.xml')
 
 
 class frm_Main(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(frm_Main, self).__init__()
+        self.db = pymysql.connect("localhost", "root", "1234", "db_opencv")
         uic.loadUi('Main.ui', self)
         self.W = self
         self.Camera = cv2.VideoCapture(0)
         self.Running = False
-        self.pixmap = QPixmap(".\icons_btn\house.png")
         self.page_list = self.findChild(QtWidgets.QStackedWidget, 'stackedWidget')
 
         # btn_Home
@@ -72,6 +75,11 @@ class frm_Main(QtWidgets.QMainWindow):
         # btn_Cam
         self.btn_Cam = self.findChild(QtWidgets.QPushButton, 'btn_Cam')
         self.btn_Cam.clicked.connect(self.Cam)
+        # btn_Cam_OFF
+        self.btn_Cam_OFF = self.findChild(QtWidgets.QPushButton, 'btn_Cam_OFF')
+        #self.btn_Cam_OFF.clicked.connect(self.x)
+        # tbv_Student
+        self.tbv_Student = self.findChild(QtWidgets.QTableWidget, 'tbv_Student')
 
         self.show()
 
@@ -79,6 +87,10 @@ class frm_Main(QtWidgets.QMainWindow):
         timer.timeout.connect(self.showTime)
         timer.start(1000)
         self.showTime()
+        self.getStudentdata()
+
+    def x(self):
+        self.Running = True
 
     def showTime(self):
         now = datetime.now()
@@ -89,43 +101,52 @@ class frm_Main(QtWidgets.QMainWindow):
         self.lb_User.setText("Welcome back! " + name)
 
     def Cam(self):
-        self.lb_Cam.setPixmap(self.pixmap)
-        #self.lb_Cam.setText("abc")
+        cap = cv2.VideoCapture(0)
+        while cap.isOpened():
+            ret, img = cap.read()
+            img = cv2.flip(img, 1)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = faceCascade.detectMultiScale(
+                gray,
+                scaleFactor=1.2,
+                minNeighbors=5,
+                minSize=(20, 20)
+            )
 
+            for (x, y, w, h) in faces:
+                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                roi_gray = gray[y:y + h, x:x + w]
+                roi_color = img[y:y + h, x:x + w]
+            self.displayImage(img, 1)
+            cv2.waitKey()
+            if self.Running:
+                break
 
-class frm_Login(QtWidgets.QMainWindow):
+        cap.release()
 
-    def __init__(self):
-        super(frm_Login, self).__init__()
-        uic.loadUi('Login.ui', self)
+    def displayImage(self, img, window=1):
+        Qformat = QImage.Format_Indexed8
 
-        self.Main = self
-        self.button = self.findChild(QtWidgets.QPushButton, 'btn_submit')
-        self.txt_US = self.findChild(QtWidgets.QLineEdit, 'txt_US')
-        self.txt_PW = self.findChild(QtWidgets.QLineEdit, 'txt_PW')
-        PW = QLineEdit.Password
-        self.txt_PW.setEchoMode(PW)
-        self.button.clicked.connect(self.ClickButtonSubmit)
+        if len(img.shape) == 3:
+            if img.shape[2] == 4:
+                Qformat = QImage.Format_RGBA888
+            else:
+                Qformat = QImage.Format_RGB888
+        img = QImage(img, img.shape[1], img.shape[0], Qformat)
+        img = img.rgbSwapped()
+        self.lb_Cam.setPixmap(QPixmap.fromImage(img))
 
-        self.show()
+    def getStudentdata(self):
+        try:
+            cursor = self.db.cursor()
+            cursor.execute("SELECT * FROM sinhvien")
+            result = cursor.fetchall()
+            self.tbv_Student.setRowCount(0)
+            for row_number, row_data in enumerate(result):
+                self.tbv_Student.insertRow(row_number)
+                for column_number, data in enumerate(row_data):
+                    # print(column_number)
+                    self.tbv_Student.setItem(row_number, column_number, QTableWidgetItem(str(data)))
 
-    def ClickButtonSubmit(self):
-        msb = QMessageBox()
-        US = self.txt_US.text()
-        PW = self.txt_PW.text()
-        if US != "admin" or PW != "123":
-            msb.setWindowTitle("Warning!")
-            msb.setText("Login fail! please try again.")
-            msb.exec_()
-        else:
-
-            if self.Main.isVisible():
-                self.Main.hide()
-                self.Main = frm_Main()
-                self.Main.getUsername(US)
-                self.Main.show()
-
-
-app = QtWidgets.QApplication(sys.argv)
-window = frm_Login()
-app.exec_()
+        except pymysql.Error as e:
+            print("Error")

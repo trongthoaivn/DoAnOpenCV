@@ -61,7 +61,7 @@ background-color: rgb(200, 200, 200);</string>
 }</string>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="Management">
        <property name="styleSheet">
@@ -1961,7 +1961,7 @@ QComboBox QAbstractItemView {
             </property>
            </widget>
           </widget>
-          <widget class="QTableWidget" name="tableWidget_14">
+          <widget class="QTableWidget" name="tbv_Student">
            <property name="geometry">
             <rect>
              <x>600</x>
@@ -1970,6 +1970,57 @@ QComboBox QAbstractItemView {
              <height>351</height>
             </rect>
            </property>
+           <property name="styleSheet">
+            <string notr="true">QWidget {
+    background-color: ;
+    color: #fffff8;
+}
+
+QHeaderView::section {
+    background-color: #646464;
+    padding: 4px;
+    border: 1px solid #fffff8;
+}
+
+QTableWidget {
+    gridline-color: #fffff8;
+}
+
+QTableWidget QTableCornerButton::section {
+    background-color: #646464;
+    border: 1px solid #fffff8;
+}</string>
+           </property>
+           <row>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </row>
+           <column>
+            <property name="text">
+             <string>ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Birth</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Sex</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Class</string>
+            </property>
+           </column>
           </widget>
          </widget>
         </widget>
@@ -2519,12 +2570,41 @@ QComboBox QAbstractItemView {
          <rect>
           <x>870</x>
           <y>420</y>
-          <width>561</width>
-          <height>381</height>
+          <width>621</width>
+          <height>411</height>
          </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgb(255, 255, 255);</string>
         </property>
         <property name="text">
          <string/>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="btn_Cam">
+        <property name="geometry">
+         <rect>
+          <x>710</x>
+          <y>520</y>
+          <width>93</width>
+          <height>28</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Cam</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="btn_Cam_OFF">
+        <property name="geometry">
+         <rect>
+          <x>710</x>
+          <y>580</y>
+          <width>93</width>
+          <height>28</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>OFF</string>
         </property>
        </widget>
       </widget>
