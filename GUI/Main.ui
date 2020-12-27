@@ -20,7 +20,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: rgb(45, 45, 45);</string>
+   <string notr="true">background-color: rgb(255, 255, 255);</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="styleSheet">
@@ -380,7 +380,7 @@ QPushButton:pressed {
 color: rgb(255, 255, 255);</string>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>5</number>
         </property>
         <widget class="QWidget" name="Home">
          <widget class="QLabel" name="lb_User">
@@ -1921,7 +1921,7 @@ QComboBox QAbstractItemView {
              </rect>
             </property>
            </widget>
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="btn_addStudent">
             <property name="geometry">
              <rect>
               <x>610</x>
@@ -1929,6 +1929,14 @@ QComboBox QAbstractItemView {
               <width>93</width>
               <height>28</height>
              </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton:hover {
+	background-color: rgb(33, 37, 43);
+}
+QPushButton:pressed {	
+	background-color: rgb(85, 170, 255);
+}</string>
             </property>
             <property name="text">
              <string>Add</string>
@@ -1943,6 +1951,14 @@ QComboBox QAbstractItemView {
               <height>28</height>
              </rect>
             </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton:hover {
+	background-color: rgb(33, 37, 43);
+}
+QPushButton:pressed {	
+	background-color: rgb(85, 170, 255);
+}</string>
+            </property>
             <property name="text">
              <string>Edit</string>
             </property>
@@ -1956,8 +1972,37 @@ QComboBox QAbstractItemView {
               <height>28</height>
              </rect>
             </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton:hover {
+	background-color: rgb(33, 37, 43);
+}
+QPushButton:pressed {	
+	background-color: rgb(85, 170, 255);
+}</string>
+            </property>
             <property name="text">
              <string>Delete</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="btn_Refresh">
+            <property name="geometry">
+             <rect>
+              <x>610</x>
+              <y>180</y>
+              <width>93</width>
+              <height>28</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton:hover {
+	background-color: rgb(33, 37, 43);
+}
+QPushButton:pressed {	
+	background-color: rgb(85, 170, 255);
+}</string>
+            </property>
+            <property name="text">
+             <string>Refresh</string>
             </property>
            </widget>
           </widget>
@@ -1990,6 +2035,12 @@ QTableWidget QTableCornerButton::section {
     background-color: #646464;
     border: 1px solid #fffff8;
 }</string>
+           </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
            </property>
            <row>
             <property name="text">

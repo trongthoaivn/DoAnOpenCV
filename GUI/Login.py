@@ -2,7 +2,7 @@ import sys
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QLineEdit
 
-from GUI.Main import frm_Main
+import GUI.Main
 
 
 class frm_Login(QtWidgets.QMainWindow):
@@ -33,7 +33,7 @@ class frm_Login(QtWidgets.QMainWindow):
 
             if self.W.isVisible():
                 self.W.hide()
-                self.Main = frm_Main().getUsername(US)
+                self.Main = GUI.Main.frm_Main().getUsername(US)
 
 
 app = QtWidgets.QApplication(sys.argv)

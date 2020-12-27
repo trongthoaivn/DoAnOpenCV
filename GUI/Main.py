@@ -1,3 +1,4 @@
+import sqlite3
 import sys
 from datetime import datetime
 import cv2
@@ -5,20 +6,28 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QPixmap, QImage
 import pymysql
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
 
+# import Login
+from GUI.Student import frm_Student
+
+recognizer = cv2.face.LBPHFaceRecognizer_create()
+recognizer.read('D:\\DoAnOpenCV\Trainer/trainer.yml')
 faceCascade = cv2.CascadeClassifier('Cascades/haarcascade_frontalface_default.xml')
-
+sqliteConnection = sqlite3.connect('D:\\DoAnOpenCV\Database\db_opencv.db')
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 class frm_Main(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(frm_Main, self).__init__()
-        self.db = pymysql.connect("localhost", "root", "1234", "db_opencv")
+
         uic.loadUi('Main.ui', self)
-        self.W = self
+        self.W = None
+        self.frm_addStudent = None
         self.Camera = cv2.VideoCapture(0)
         self.Running = False
+        self.nameStudent = None
         self.page_list = self.findChild(QtWidgets.QStackedWidget, 'stackedWidget')
 
         # btn_Home
@@ -75,22 +84,73 @@ class frm_Main(QtWidgets.QMainWindow):
         # btn_Cam
         self.btn_Cam = self.findChild(QtWidgets.QPushButton, 'btn_Cam')
         self.btn_Cam.clicked.connect(self.Cam)
+
         # btn_Cam_OFF
         self.btn_Cam_OFF = self.findChild(QtWidgets.QPushButton, 'btn_Cam_OFF')
-        #self.btn_Cam_OFF.clicked.connect(self.x)
+        self.btn_Cam_OFF.clicked.connect(self.setOff)
+
         # tbv_Student
         self.tbv_Student = self.findChild(QtWidgets.QTableWidget, 'tbv_Student')
+
+        # btn_Logout
+        self.btn_Logout = self.findChild(QtWidgets.QPushButton, 'btn_Logout')
+        self.btn_Logout.clicked.connect(self.clearTable)
+
+        # btn_addStudent
+        self.btn_addStudent = self.findChild(QtWidgets.QPushButton, 'btn_addStudent')
+        self.btn_addStudent.clicked.connect(self.addStudent)
+
+        # btn_Refresh
+        self.btn_Refresh = self.findChild(QtWidgets.QPushButton, 'btn_Refresh')
+        self.btn_Refresh.clicked.connect(self.getStudentdata)
 
         self.show()
 
         timer = QTimer(self)
         timer.timeout.connect(self.showTime)
+        timer.timeout.connect(self.getStudentdata)
         timer.start(1000)
         self.showTime()
         self.getStudentdata()
 
-    def x(self):
+    def clearTable(self):
+        while self.tbv_Student.rowCount() > 0:
+            self.tbv_Student.removeRow(0)
+
+    def addStudent(self):
+        self.frm_addStudent = frm_Student()
+
+    def setOff(self):
         self.Running = True
+
+    def getIdStudent(self,Id):
+        try:
+            cursor = sqliteConnection.cursor()
+            cursor.execute("SELECT hotenSV FROM SINHVIEN WHERE maSV='%s'"%Id)
+            nameStudent = None
+            for row in cursor:
+                nameStudent = row
+            self.nameStudent = nameStudent
+        finally: 
+            pass
+        
+    def Logout(self):
+        reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            pass
+        else:
+            pass
+
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
 
     def showTime(self):
         now = datetime.now()
@@ -101,6 +161,7 @@ class frm_Main(QtWidgets.QMainWindow):
         self.lb_User.setText("Welcome back! " + name)
 
     def Cam(self):
+        self.Running = False
         cap = cv2.VideoCapture(0)
         while cap.isOpened():
             ret, img = cap.read()
@@ -115,14 +176,23 @@ class frm_Main(QtWidgets.QMainWindow):
 
             for (x, y, w, h) in faces:
                 cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                roi_gray = gray[y:y + h, x:x + w]
-                roi_color = img[y:y + h, x:x + w]
+                id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
+
+                if (confidence < 100):
+                    self.getIdStudent(id)
+                    id = self.nameStudent
+                else:
+                    id = "unknown"
+                cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
+
             self.displayImage(img, 1)
             cv2.waitKey()
             if self.Running:
                 break
 
         cap.release()
+        cv2.destroyAllWindows()
+        self.lb_Cam.clear()
 
     def displayImage(self, img, window=1):
         Qformat = QImage.Format_Indexed8
@@ -138,15 +208,17 @@ class frm_Main(QtWidgets.QMainWindow):
 
     def getStudentdata(self):
         try:
-            cursor = self.db.cursor()
-            cursor.execute("SELECT * FROM sinhvien")
+            self.clearTable()
+            cursor = sqliteConnection.cursor()
+            cursor.execute("SELECT * FROM SINHVIEN")
             result = cursor.fetchall()
-            self.tbv_Student.setRowCount(0)
             for row_number, row_data in enumerate(result):
                 self.tbv_Student.insertRow(row_number)
                 for column_number, data in enumerate(row_data):
                     # print(column_number)
                     self.tbv_Student.setItem(row_number, column_number, QTableWidgetItem(str(data)))
-
         except pymysql.Error as e:
             print("Error")
+# app = QtWidgets.QApplication(sys.argv)
+# window = frm_Main()
+# sys.exit(app.exec_())
