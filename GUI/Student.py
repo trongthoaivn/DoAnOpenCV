@@ -51,7 +51,6 @@ class frm_Student(QtWidgets.QMainWindow):
         if reply == QMessageBox.Yes:
             event.accept()
             self.setOff()
-            os.system('python D:\\DoAnOpenCV/Training.py')
             sqliteConnection.close()
         else:
             event.ignore()

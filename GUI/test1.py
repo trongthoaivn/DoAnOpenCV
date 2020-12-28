@@ -1,24 +1,17 @@
 import sqlite3
-
+import os
 
 def updateSqliteTable():
-
-    Id = input("Id: ")
-    Name = input("Name :")
-    Birth = input("Birth :")
-    Sex = input("Sex :")
-    Class = input("Class :")
-    try:
-        sqliteConnection = sqlite3.connect('D:\\DoAnOpenCV\db_opencv.db')
-        cursor = sqliteConnection.cursor()
-        print("Connected to SQLite")
-
-        query = query = "update  sinhvien set maSV='%s', hotenSV ='%s', ngaysinhSV ='%s', gioitinhSV ='%s', lopSV='%s' where maSV='%s'" % (Id, Name, Birth, Sex, Class, Id)
-        cursor.execute(query)
-        sqliteConnection.commit()
-
-    except sqlite3.Error as error:
-        print("Failed to update sqlite table", error)
+    Id = "1811060744"
+    sqliteConnection = sqlite3.connect("D:\\DoAnOpenCV\Database\db_opencv.db")
+    cursor = sqliteConnection.cursor()
+    query = "SELECT hotenSV FROM SINHVIEN WHERE maSV='%s'" % Id
+    cursor.execute(query)
+    input="(',)"
+    output="    "
+    data = str(cursor.fetchone())
+    trans = data.maketrans(input, output)
+    print(data.translate(trans).strip(" "))
 
 
 updateSqliteTable()

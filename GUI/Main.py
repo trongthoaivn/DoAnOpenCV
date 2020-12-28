@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import sys
 from datetime import datetime
@@ -16,6 +17,14 @@ recognizer.read('D:\\DoAnOpenCV\Trainer/trainer.yml')
 faceCascade = cv2.CascadeClassifier('Cascades/haarcascade_frontalface_default.xml')
 sqliteConnection = sqlite3.connect('D:\\DoAnOpenCV\Database\db_opencv.db')
 font = cv2.FONT_HERSHEY_SIMPLEX
+input = "(',)"
+output = "    "
+
+
+def handlingText(text):
+    trans = text.maketrans(input, output)
+    print(text.translate(trans).strip(" "))
+
 
 class frm_Main(QtWidgets.QMainWindow):
 
@@ -102,7 +111,7 @@ class frm_Main(QtWidgets.QMainWindow):
 
         # btn_Refresh
         self.btn_Refresh = self.findChild(QtWidgets.QPushButton, 'btn_Refresh')
-        self.btn_Refresh.clicked.connect(self.getStudentdata)
+        self.btn_Refresh.clicked.connect(lambda: os.system('python D:\\DoAnOpenCV/Training.py'))
 
         self.show()
 
@@ -123,17 +132,18 @@ class frm_Main(QtWidgets.QMainWindow):
     def setOff(self):
         self.Running = True
 
-    def getIdStudent(self,Id):
+    def getIdStudent(self, Id):
         try:
             cursor = sqliteConnection.cursor()
-            cursor.execute("SELECT hotenSV FROM SINHVIEN WHERE maSV='%s'"%Id)
+            cursor.execute("SELECT hotenSV FROM SINHVIEN WHERE maSV='%s'" % Id)
             nameStudent = None
             for row in cursor:
                 nameStudent = row
             self.nameStudent = nameStudent
-        finally: 
+            #handlingText(nameStudent)
+        finally:
             pass
-        
+
     def Logout(self):
         reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -149,6 +159,7 @@ class frm_Main(QtWidgets.QMainWindow):
 
         if reply == QMessageBox.Yes:
             event.accept()
+            self.setOff()
         else:
             event.ignore()
 
@@ -178,12 +189,12 @@ class frm_Main(QtWidgets.QMainWindow):
                 cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
                 id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
 
-                if (confidence < 100):
+                if (confidence <100):
                     self.getIdStudent(id)
                     id = self.nameStudent
                 else:
                     id = "unknown"
-                cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
+                cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (0, 255, 255), 2)
 
             self.displayImage(img, 1)
             cv2.waitKey()

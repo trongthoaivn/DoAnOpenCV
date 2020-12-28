@@ -31,3 +31,4 @@ faces, ids = getImagesAndLabels(path)
 recognizer.train(faces, np.array(ids))
 recognizer.save('Trainer/trainer.yml')
 
+print("\n [INFO] {0} faces trained. Exiting Program".format(len(np.unique(ids))))

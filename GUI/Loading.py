@@ -1,3 +1,5 @@
+import sys
+
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtGui import QMovie
 from PyQt5.QtCore import Qt, QTimer
@@ -22,3 +24,7 @@ class frm_Loading(QtWidgets.QMainWindow):
     def stop(self):
         self.movie.stop()
         self.close()
+
+app = QtWidgets.QApplication(sys.argv)
+window = frm_Loading()
+sys.exit(app.exec_())
