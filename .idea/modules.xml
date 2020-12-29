@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/DoAnOpenCV.iml" filepath="$PROJECT_DIR$/.idea/DoAnOpenCV.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../OpenCV-Face-Recognition-master/.idea/OpenCV-Face-Recognition-master.iml" filepath="$PROJECT_DIR$/../OpenCV-Face-Recognition-master/.idea/OpenCV-Face-Recognition-master.iml" />
     </modules>
   </component>
 </project>

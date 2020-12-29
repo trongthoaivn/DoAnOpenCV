@@ -3,6 +3,8 @@ import sqlite3
 import sys
 from datetime import datetime
 import cv2
+import unidecode
+from PIL import ImageFont
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QPixmap, QImage
@@ -16,14 +18,7 @@ recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.read('D:\\DoAnOpenCV\Trainer/trainer.yml')
 faceCascade = cv2.CascadeClassifier('Cascades/haarcascade_frontalface_default.xml')
 sqliteConnection = sqlite3.connect('D:\\DoAnOpenCV\Database\db_opencv.db')
-font = cv2.FONT_HERSHEY_SIMPLEX
-input = "(',)"
-output = "    "
-
-
-def handlingText(text):
-    trans = text.maketrans(input, output)
-    print(text.translate(trans).strip(" "))
+font = cv2.FONT_HERSHEY_PLAIN
 
 
 class frm_Main(QtWidgets.QMainWindow):
@@ -37,6 +32,8 @@ class frm_Main(QtWidgets.QMainWindow):
         self.Camera = cv2.VideoCapture(0)
         self.Running = False
         self.nameStudent = None
+        self.input = "(',)"
+        self.output = "    "
         self.page_list = self.findChild(QtWidgets.QStackedWidget, 'stackedWidget')
 
         # btn_Home
@@ -112,6 +109,7 @@ class frm_Main(QtWidgets.QMainWindow):
         # btn_Refresh
         self.btn_Refresh = self.findChild(QtWidgets.QPushButton, 'btn_Refresh')
         self.btn_Refresh.clicked.connect(lambda: os.system('python D:\\DoAnOpenCV/Training.py'))
+        # self.btn_Refresh.clicked.connect(self.getIdStudent("1811060744"))
 
         self.show()
 
@@ -139,8 +137,7 @@ class frm_Main(QtWidgets.QMainWindow):
             nameStudent = None
             for row in cursor:
                 nameStudent = row
-            self.nameStudent = nameStudent
-            #handlingText(nameStudent)
+            self.nameStudent = unidecode.unidecode(nameStudent[0])
         finally:
             pass
 
@@ -186,15 +183,16 @@ class frm_Main(QtWidgets.QMainWindow):
             )
 
             for (x, y, w, h) in faces:
-                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                cv2.rectangle(img, (x, y), (x + w, y + h), (89, 255, 0), 2)
                 id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
 
-                if (confidence <100):
+                if (confidence < 70):
                     self.getIdStudent(id)
                     id = self.nameStudent
+                    cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (0, 255, 255), 2)
                 else:
-                    id = "unknown"
-                cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (0, 255, 255), 2)
+                    id = "Unknown"
+                    cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (0, 25, 255), 2)
 
             self.displayImage(img, 1)
             cv2.waitKey()
@@ -230,6 +228,8 @@ class frm_Main(QtWidgets.QMainWindow):
                     self.tbv_Student.setItem(row_number, column_number, QTableWidgetItem(str(data)))
         except pymysql.Error as e:
             print("Error")
+
+
 # app = QtWidgets.QApplication(sys.argv)
 # window = frm_Main()
 # sys.exit(app.exec_())
