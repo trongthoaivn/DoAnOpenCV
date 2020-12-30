@@ -25,6 +25,7 @@ class frm_Loading(QtWidgets.QMainWindow):
         self.movie.stop()
         self.close()
 
+
 app = QtWidgets.QApplication(sys.argv)
 window = frm_Loading()
 sys.exit(app.exec_())

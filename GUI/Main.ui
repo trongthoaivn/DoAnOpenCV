@@ -232,7 +232,7 @@ QPushButton:pressed {
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>icons/24x24/cil-exit-to-app.png</normaloff>icons/24x24/cil-exit-to-app.png</iconset>
+           <normaloff>icons_btn/cil-exit-to-app.png</normaloff>icons_btn/cil-exit-to-app.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -294,7 +294,7 @@ QPushButton:pressed {
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>icons/24x24/cil-comment-bubble.png</normaloff>icons/24x24/cil-comment-bubble.png</iconset>
+           <normaloff>C:/Users/trong/.designer/backup/icons/24x24/cil-comment-bubble.png</normaloff>C:/Users/trong/.designer/backup/icons/24x24/cil-comment-bubble.png</iconset>
          </property>
          <property name="iconSize">
           <size>
@@ -380,7 +380,7 @@ QPushButton:pressed {
 color: rgb(255, 255, 255);</string>
         </property>
         <property name="currentIndex">
-         <number>5</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="Home">
          <widget class="QLabel" name="lb_User">
@@ -1911,16 +1911,6 @@ QComboBox QAbstractItemView {
              <string>FIND ID</string>
             </property>
            </widget>
-           <widget class="QTextBrowser" name="txt_Count_53">
-            <property name="geometry">
-             <rect>
-              <x>160</x>
-              <y>10</y>
-              <width>241</width>
-              <height>31</height>
-             </rect>
-            </property>
-           </widget>
            <widget class="QPushButton" name="btn_addStudent">
             <property name="geometry">
              <rect>
@@ -1963,7 +1953,7 @@ QPushButton:pressed {
              <string>Edit</string>
             </property>
            </widget>
-           <widget class="QPushButton" name="pushButton_5">
+           <widget class="QPushButton" name="btn_Delete">
             <property name="geometry">
              <rect>
               <x>610</x>
@@ -2003,6 +1993,16 @@ QPushButton:pressed {
             </property>
             <property name="text">
              <string>Refresh</string>
+            </property>
+           </widget>
+           <widget class="QLineEdit" name="lineEdit">
+            <property name="geometry">
+             <rect>
+              <x>190</x>
+              <y>10</y>
+              <width>271</width>
+              <height>31</height>
+             </rect>
             </property>
            </widget>
           </widget>
@@ -2271,7 +2271,7 @@ QPushButton {
           <x>10</x>
           <y>10</y>
           <width>631</width>
-          <height>711</height>
+          <height>851</height>
          </rect>
         </property>
         <property name="styleSheet">
@@ -2281,21 +2281,79 @@ color: rgb(255, 255, 255);</string>
         <property name="title">
          <string>STUDENT LIST</string>
         </property>
-        <widget class="QListView" name="lsv_Student">
+        <widget class="QTableWidget" name="tbv_StudentAt">
          <property name="geometry">
           <rect>
            <x>20</x>
            <y>30</y>
            <width>591</width>
-           <height>601</height>
+           <height>751</height>
           </rect>
          </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QWidget {
+    background-color: ;
+    color: #fffff8;
+}
+
+QHeaderView::section {
+    background-color: #646464;
+    padding: 4px;
+    border: 1px solid #fffff8;
+}
+
+QTableWidget {
+    gridline-color: #fffff8;
+}
+
+QTableWidget QTableCornerButton::section {
+    background-color: #646464;
+    border: 1px solid #fffff8;
+}</string>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustToContents</enum>
+         </property>
+         <property name="autoScrollMargin">
+          <number>20</number>
+         </property>
+         <column>
+          <property name="text">
+           <string>Id</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Name</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Birth</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Sex</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Class</string>
+          </property>
+         </column>
         </widget>
         <widget class="QLabel" name="label">
          <property name="geometry">
           <rect>
            <x>90</x>
-           <y>660</y>
+           <y>810</y>
            <width>55</width>
            <height>16</height>
           </rect>
@@ -2312,7 +2370,7 @@ color: rgb(255, 255, 255);</string>
          <property name="geometry">
           <rect>
            <x>150</x>
-           <y>650</y>
+           <y>800</y>
            <width>131</width>
            <height>31</height>
           </rect>
@@ -2322,7 +2380,7 @@ color: rgb(255, 255, 255);</string>
          <property name="geometry">
           <rect>
            <x>330</x>
-           <y>660</y>
+           <y>810</y>
            <width>55</width>
            <height>16</height>
           </rect>
@@ -2338,7 +2396,7 @@ color: rgb(255, 255, 255);</string>
          <property name="geometry">
           <rect>
            <x>400</x>
-           <y>650</y>
+           <y>800</y>
            <width>131</width>
            <height>31</height>
           </rect>
@@ -2667,7 +2725,7 @@ QComboBox QAbstractItemView {
  <tabstops>
   <tabstop>txt_Count</tabstop>
   <tabstop>txt_Absent</tabstop>
-  <tabstop>lsv_Student</tabstop>
+  <tabstop>tbv_StudentAt</tabstop>
   <tabstop>cbo_Faculty</tabstop>
   <tabstop>lsv_Lecturer</tabstop>
   <tabstop>cbo_Subject</tabstop>
