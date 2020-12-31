@@ -108,7 +108,7 @@ class frm_Main(QtWidgets.QMainWindow):
 
         # btn_Refresh
         self.btn_Refresh = self.findChild(QtWidgets.QPushButton, 'btn_Refresh')
-        self.btn_Refresh.clicked.connect(lambda: os.system('python D:\\DoAnOpenCV/Training.py'))
+        self.btn_Refresh.clicked.connect(lambda: os.system('python.exe D:\\DoAnOpenCV\Trainer\Training.py'))
         # self.btn_Refresh.clicked.connect(self.getIdStudent("1811060744"))
         # btn_Delete
 
@@ -182,6 +182,7 @@ class frm_Main(QtWidgets.QMainWindow):
         if reply == QMessageBox.Yes:
             self.hide()
             self.W = frm_Login()
+            self.setOff()
         else:
             pass
 
@@ -266,7 +267,7 @@ class frm_Main(QtWidgets.QMainWindow):
             print("Error")
 
 
-####################################################################################################################################
+########################################################################################################################
 class frm_Login(QtWidgets.QMainWindow):
 
     def __init__(self):
@@ -290,16 +291,19 @@ class frm_Login(QtWidgets.QMainWindow):
         msb = QMessageBox()
         US = self.txt_US.text()
         PW = self.txt_PW.text()
-        if US != "admin" or PW != "123":
-            msb.setWindowTitle("Warning!")
-            msb.setText("Login fail! please try again.")
-            msb.exec_()
-        else:
-
-            if self.W.isVisible():
-                self.W.hide()
-                self.Main = frm_Main()
-                self.Main.getUsername(US)
+        cursor = sqliteConnection.cursor()
+        cursor.execute("SELECT taiKhoan , matKhau , hotenGV FROM GIANGVIEN ")
+        result = cursor.fetchall()
+        for row in result:
+            if US != row[0] or PW != row[1]:
+                msb.setWindowTitle("Warning!")
+                msb.setText("Login fail! please try again.")
+                msb.exec_()
+            else:
+                if self.W.isVisible():
+                    self.W.hide()
+                    self.Main = frm_Main()
+                    self.Main.getUsername(row[2])
 
 
 app = QtWidgets.QApplication(sys.argv)
