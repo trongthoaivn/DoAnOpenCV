@@ -1,7 +1,6 @@
 import sys
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QProgressBar
-from PyQt5.QtCore import Qt
 
 class QTimer_ProgressBar(QMainWindow):
 

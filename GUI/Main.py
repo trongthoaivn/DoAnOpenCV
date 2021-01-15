@@ -1,21 +1,23 @@
+import csv
 import os
 import sqlite3
 import sys
 from datetime import datetime
 import cv2
+import face_recognition
 import unidecode
-from PyQt5 import QtWidgets, uic
+import numpy as np
+from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QPixmap, QImage
-import pymysql
-from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QLineEdit
+from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox, QLineEdit, QFileDialog
 from PyQt5.QtCore import Qt
+import xlwt
+
 from GUI.Student import frm_Student
 
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-recognizer.read('D:\\DoAnOpenCV\Trainer/trainer.yml')
-faceCascade = cv2.CascadeClassifier('Cascades/haarcascade_frontalface_default.xml')
-sqliteConnection = sqlite3.connect('D:\\DoAnOpenCV\Database\db_opencv.db')
+CURR_DIR = os.path.dirname(__file__)
+sqliteConnection = sqlite3.connect('%s/Database/db_opencv.db' % CURR_DIR[0:13])
 font = cv2.FONT_HERSHEY_PLAIN
 
 
@@ -24,15 +26,22 @@ class frm_Main(QtWidgets.QMainWindow):
     def __init__(self):
         super(frm_Main, self).__init__()
 
-        uic.loadUi('Main.ui', self)
+        uic.loadUi('%s/Main.ui' % CURR_DIR, self)
         self.W = None
         self.frm_addStudent = None
         self.Camera = cv2.VideoCapture(0)
         self.Running = False
+        self.Count = 0
         self.nameStudent = None
         self.input = "(',)"
         self.output = "    "
         self.data = None
+        self.process_this_frame = True
+        self.known_face_encodings = []
+        self.known_face_names = []
+        self.face_locations = []
+        self.face_encodings = []
+        self.face_names = []
         self.page_list = self.findChild(QtWidgets.QStackedWidget, 'stackedWidget')
 
         # btn_Home
@@ -82,45 +91,65 @@ class frm_Main(QtWidgets.QMainWindow):
         self.lb_Timer = self.findChild(QtWidgets.QLabel, 'lb_Timer')
 
         # lb_User
+
         self.lb_User = self.findChild(QtWidgets.QLabel, 'lb_User')
 
         # lb_Cam
+
         self.lb_Cam = self.findChild(QtWidgets.QLabel, 'lb_cam')
 
         # btn_Cam
+
         self.btn_Cam = self.findChild(QtWidgets.QPushButton, 'btn_Cam')
         self.btn_Cam.clicked.connect(self.Cam)
 
         # btn_Cam_OFF
+
         self.btn_Cam_OFF = self.findChild(QtWidgets.QPushButton, 'btn_Cam_OFF')
         self.btn_Cam_OFF.clicked.connect(self.setOff)
 
         # tbv_Student
+
         self.tbv_Student = self.findChild(QtWidgets.QTableWidget, 'tbv_Student')
+        self.tbv_Student.cellClicked.connect(self.GetIdtoDelete)
 
         # btn_Logout
         self.btn_Logout = self.findChild(QtWidgets.QPushButton, 'btn_Logout')
         self.btn_Logout.clicked.connect(self.Logout)
 
         # btn_addStudent
+
         self.btn_addStudent = self.findChild(QtWidgets.QPushButton, 'btn_addStudent')
         self.btn_addStudent.clicked.connect(self.addStudent)
 
         # btn_Refresh
+
         self.btn_Refresh = self.findChild(QtWidgets.QPushButton, 'btn_Refresh')
-        self.btn_Refresh.clicked.connect(lambda: os.system('python.exe D:\\DoAnOpenCV\Trainer\Training.py'))
-        # self.btn_Refresh.clicked.connect(self.getIdStudent("1811060744"))
+        self.btn_Refresh.clicked.connect(lambda: os.system('python.exe %s/Trainer/Training.py' % CURR_DIR[0:13]))
+
+        # btn_Export
+
+        self.btn_Export = self.findChild(QtWidgets.QPushButton, 'btn_Export')
+        self.btn_Export.clicked.connect(self.exportData)
+
         # btn_Delete
 
         self.btn_Delete = self.findChild(QtWidgets.QPushButton, 'btn_Delete')
         self.btn_Delete.clicked.connect(self.deleteStudent)
+
+        # txt_Count
+
+        self.txt_Count = self.findChild(QtWidgets.QTextBrowser, 'txt_Count')
+
         # txt_idStudent
 
-        self.txt_idStudent = self.findChild(QtWidgets.QLineEdit, 'txt_idStudent')
-        # self.txt_idStudent.setText("")
+        self.txt_idStudent = self.findChild(QtWidgets.QLineEdit, 'txt_IDStudent')
+
         # tbv_StudentAt
+
         self.tbv_StudentAt = self.findChild(QtWidgets.QTableWidget, 'tbv_StudentAt')
 
+        # RunSlot:
         self.show()
 
         timer = QTimer(self)
@@ -137,30 +166,88 @@ class frm_Main(QtWidgets.QMainWindow):
         cursor.execute(query)
         self.data = cursor.fetchall()
 
+    def deleteStudentinDb(self, ID):
+        cursor = sqliteConnection.cursor()
+        query = "DELETE FROM SINHVIEN WHERE maSV ='%s'" % ID
+        cursor.execute(query)
+        sqliteConnection.commit()
+
+    def delteStudentinFile(self, ID):
+        if os.path.exists("%s/Dataset/%s.png" % (CURR_DIR[0:13], ID)):
+            os.remove("%s/Dataset/%s.png" % (CURR_DIR[0:13], ID))
+
+    def clearAtTable(self):
+        while self.tbv_StudentAt.rowCount() > 0:
+            self.tbv_StudentAt.removeRow(0)
+
     def clearTable(self):
         while self.tbv_Student.rowCount() > 0:
             self.tbv_Student.removeRow(0)
 
     def addStudent(self):
+
         self.frm_addStudent = frm_Student()
 
     def setOff(self):
         self.Running = True
 
+    def GetIdtoDelete(self):
+        row = self.tbv_Student.currentRow()
+        idRow = self.tbv_Student.item(row, 0).text()
+        self.txt_idStudent.setText(idRow)
+
     def deleteStudent(self):
-        pass
+        if self.txt_idStudent.text() != "":
+            reply = QMessageBox.question(self, 'Delete',
+                                         'Are you sure you want to delete student %s?' % self.txt_idStudent.text(),
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.Yes:
+                self.deleteStudentinDb(self.txt_idStudent.text())
+                self.delteStudentinFile(self.txt_idStudent.text())
+                self.txt_idStudent.clear()
+            else:
+                pass
+        else:
+            reply = QMessageBox.question(self, 'None selected student',
+                                         'Please select the student to delete', QMessageBox.Ok)
+
+    def exportData(self):
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save File', '', ".xls(*.xls)")
+        wbk = xlwt.Workbook()
+        sheet = wbk.add_sheet("sheet", cell_overwrite_ok=True)
+        style = xlwt.XFStyle()
+        font = xlwt.Font()
+        font.bold = True
+        style.font = font
+        model = self.tbv_StudentAt.model()
+        for c in range(model.columnCount()):
+            text = model.headerData(c, QtCore.Qt.Horizontal)
+            sheet.write(0, c + 1, text, style=style)
+
+        for r in range(model.rowCount()):
+            text = model.headerData(r, QtCore.Qt.Vertical)
+            sheet.write(r + 1, 0, text, style=style)
+
+        for c in range(model.columnCount()):
+            for r in range(model.rowCount()):
+                text = model.data(model.index(r, c))
+                sheet.write(r + 1, c + 1, text)
+        wbk.save(filename)
 
     def attendStudent(self, Id):
         count = self.tbv_StudentAt.rowCount()
         for row in self.data:
             if row[0] == str(Id):
+                self.Count += 1
+                self.txt_Count.setText(str(self.Count))
+                now = datetime.now()
+                dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
                 print(row[0] + " " + row[1])
                 self.tbv_StudentAt.insertRow(count)
                 self.tbv_StudentAt.setItem(count, 0, QTableWidgetItem(row[0]))
                 self.tbv_StudentAt.setItem(count, 1, QTableWidgetItem(row[1]))
-                self.tbv_StudentAt.setItem(count, 2, QTableWidgetItem(row[2]))
-                self.tbv_StudentAt.setItem(count, 3, QTableWidgetItem(row[3]))
-                self.tbv_StudentAt.setItem(count, 4, QTableWidgetItem(row[4]))
+                self.tbv_StudentAt.setItem(count, 2, QTableWidgetItem(dt_string))
                 self.data.remove(row)
 
     def getIdStudent(self, Id):
@@ -206,32 +293,73 @@ class frm_Main(QtWidgets.QMainWindow):
 
     def Cam(self):
         self.Running = False
+        with open('%s/Trainer/data.csv' % CURR_DIR[0:13], 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                text = row[1].replace("]", "").replace("[", "")
+                array_face = np.fromstring(text, dtype=float, sep='  ')
+                self.known_face_encodings.append(array_face)
+                self.known_face_names.append(row[0])
+
         cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 441)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 901)
         while cap.isOpened():
-            ret, img = cap.read()
-            img = cv2.flip(img, 1)
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = faceCascade.detectMultiScale(
-                gray,
-                scaleFactor=1.2,
-                minNeighbors=5,
-                minSize=(20, 20)
-            )
+            # Grab a single frame of video
+            ret, frame = cap.read()
 
-            for (x, y, w, h) in faces:
-                cv2.rectangle(img, (x, y), (x + w, y + h), (89, 255, 0), 2)
-                id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
+            # Resize frame of video to 1/4 size for faster face recognition processing
+            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
-                if (confidence < 70):
-                    self.getIdStudent(id)
-                    self.attendStudent(id)
-                    id = self.nameStudent
-                    cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (0, 255, 255), 2)
-                else:
-                    id = "Unknown"
-                    cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (0, 25, 255), 2)
+            # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            rgb_small_frame = small_frame[:, :, ::-1]
 
-            self.displayImage(img, 1)
+            # Only process every other frame of video to save time
+            if self.process_this_frame:
+                # Find all the faces and face encodings in the current frame of video
+                self.face_locations = face_recognition.face_locations(rgb_small_frame)
+                self.face_encodings = face_recognition.face_encodings(rgb_small_frame, self.face_locations)
+
+                self.face_names = []
+                for face_encoding in self.face_encodings:
+                    # See if the face is a match for the known face(s)
+                    matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding)
+                    name = "Unknown"
+
+                    # # If a match was found in known_face_encodings, just use the first one.
+                    # if True in matches:
+                    #     first_match_index = matches.index(True)
+                    #     name = known_face_names[first_match_index]
+
+                    # Or instead, use the known face with the smallest distance to the new face
+                    face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
+                    best_match_index = np.argmin(face_distances)
+                    if matches[best_match_index]:
+                        name = self.known_face_names[int(best_match_index)]
+
+                    self.face_names.append(name)
+
+            self.process_this_frame = not self.process_this_frame
+
+            # Display the results
+            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+                top *= 4
+                right *= 4
+                bottom *= 4
+                left *= 4
+
+                # Draw a box around the face
+                cv2.rectangle(frame, (left, top), (right, bottom), (89, 255, 0), 2)
+
+                # Draw a label with a name below the face
+                # cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+                font = cv2.FONT_HERSHEY_COMPLEX_SMALL
+                self.getIdStudent(name)
+                self.attendStudent(name)
+                cv2.putText(frame, self.nameStudent, (left - 50, top - 5), font, 1.0, (0, 255, 255), 1)
+
+            self.displayImage(frame, 1)
             cv2.waitKey()
             if self.Running:
                 break
@@ -263,7 +391,7 @@ class frm_Main(QtWidgets.QMainWindow):
                 for column_number, data in enumerate(row_data):
                     # print(column_number)
                     self.tbv_Student.setItem(row_number, column_number, QTableWidgetItem(str(data)))
-        except pymysql.Error as e:
+        except sqlite3.Error as e:
             print("Error")
 
 
@@ -272,7 +400,7 @@ class frm_Login(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(frm_Login, self).__init__()
-        uic.loadUi('login_form.ui', self)
+        uic.loadUi('%s/login_form.ui' % CURR_DIR, self)
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.Main = None
         self.W = self
@@ -305,7 +433,8 @@ class frm_Login(QtWidgets.QMainWindow):
                     self.Main = frm_Main()
                     self.Main.getUsername(row[2])
 
-
-app = QtWidgets.QApplication(sys.argv)
-window = frm_Login()
-sys.exit(app.exec_())
+#
+#
+# app = QtWidgets.QApplication(sys.argv)
+# window = frm_Main()
+# sys.exit(app.exec_())

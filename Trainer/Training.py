@@ -1,34 +1,31 @@
-import cv2
-import numpy as np
-from PIL import Image
+import csv
 import os
+import cv2
+import face_recognition
 
-path = 'D:\\DoAnOpenCV\Dataset'
+CURR_DIR = os.path.dirname(__file__)
+images = []
+known_face_encodings = []
+known_face_names = []
+attendance_list = os.listdir('%s/Dataset'%CURR_DIR[0:13])
+path = '%s/Dataset'%CURR_DIR[0:13]
+for r in attendance_list:
+    img_non = cv2.imread("%s/%s" % (path, r))
+    images.append(img_non)
+    known_face_names.append("%s" % os.path.splitext(r)[0])
+for it in images:
+    it = cv2.cvtColor(it, cv2.COLOR_BGR2RGB)
+    face = face_recognition.face_locations(it)
+    img_encode = face_recognition.face_encodings(it, face)[0]
+    known_face_encodings.append(img_encode)
+with open('%s/data.csv' % CURR_DIR, 'w', newline='') as file:
+    writer = csv.writer(file)
+    for name in known_face_names:
+        for face in known_face_encodings:
+            value = face
+            writer.writerow([name, face])
+            known_face_encodings.remove(value)
+            break
 
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-detector = cv2.CascadeClassifier("D:\\DoAnOpenCV\Trainer\haarcascade_frontalface_default.xml");
-
-
-def getImagesAndLabels(path):
-    imagePaths = [os.path.join(path, f) for f in os.listdir(path)]
-    faceSamples = []
-    ids = []
-    for imagePath in imagePaths:
-
-        PIL_img = Image.open(imagePath).convert('L')  # convert it to grayscale
-        img_numpy = np.array(PIL_img, 'uint8')
-        id = int(os.path.split(imagePath)[-1].split(".")[1])
-        faces = detector.detectMultiScale(img_numpy)
-
-        for (x, y, w, h) in faces:
-            faceSamples.append(img_numpy[y:y + h, x:x + w])
-            ids.append(id)
-
-    return faceSamples, ids
-
-
-faces, ids = getImagesAndLabels(path)
-recognizer.train(faces, np.array(ids))
-recognizer.save('Trainer/trainer.yml')
-
-print("\n [INFO] {0} faces trained. Exiting Program".format(len(np.unique(ids))))
+print(CURR_DIR[0:13])
+print('complete')

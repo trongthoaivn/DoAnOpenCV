@@ -2,5 +2,11 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Face-Recogntion-PyQt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/FaceNet-Real-Time-face-recognition" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Facial-Recognition-using-Facenet" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/MiAI_FaceRecog_2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/face_recognition" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/facenet-face-recognition" vcs="Git" />
   </component>
 </project>
